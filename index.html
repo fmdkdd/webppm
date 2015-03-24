@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf8">
+  <title>WebPPM — PPM viewer</title>
+  <style>
+    #display {
+      border: 1px solid #666;
+      display: block; margin-top: 1rem
+    }
+    input { vertical-align: middle }
+  </style>
+  <script src="webppm.js"></script>
+</head>
+<body>
+  <p>Drop the plain PPM file anywhere in this window.</p>
+  <label for="zoom">Zoom</label>
+  <input id="zoom" type="range" min="1" max="50" step="1" value="10">
+  <canvas id="display"></canvas>
+</body>
+</html>
