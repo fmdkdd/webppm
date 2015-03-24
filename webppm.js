@@ -31,6 +31,9 @@ function init() {
     zoom = $zoom.value
     display(lastPPM)
   })
+
+  // Get zoom value from DOM.  The browser can save the set value from
+  // a previous session, so it’s not always set to the default value.
   zoom = $zoom.value
 }
 
