@@ -43,7 +43,7 @@ function error(e) { console.error(e) }
 function parse(ppmString) {
   // Remove lines comment lines beginning with '#', then rejoin.
   var lines = ppmString.split('\n')
-    .filter(l => !l.startsWith('#'))
+    .filter(l => !l.match(/^#/))
     .join('\n')
 
   var whitespace = /[ \t\r\n]+/
