@@ -1,9 +1,13 @@
 document.addEventListener('DOMContentLoaded', init)
 
-var zoom = 10
-var lastPPM = {width: 0, height: 0, pixels: []}
+var zoom
+var $canvas
+var ctxt
 
 function init() {
+  $canvas = document.getElementById('display')
+  ctxt = $canvas.getContext('2d')
+
   var dropArea = window
 
   // PreventDefault to prevent the browser from capturing the drop
@@ -18,18 +22,16 @@ function init() {
     if (file == null) return error('No file was dropped')
 
     var reader = new FileReader()
-    reader.onload = () => {
-      lastPPM = parse(reader.result)
-      display(lastPPM)
-    }
+    reader.onload = () => {display(reader.result)}
     reader.onerror = error
     reader.readAsText(file)
   })
 
   var $zoom = document.getElementById('zoom')
-  $zoom.addEventListener('input', (e) => {
+  $zoom.addEventListener('input', _ => {
     zoom = $zoom.value
-    display(lastPPM)
+    $canvas.style.width = `${$canvas.width * zoom}px`
+    $canvas.style.height = `${$canvas.height * zoom}px`
   })
 
   // Get zoom value from DOM.  The browser can save the set value from
@@ -39,8 +41,9 @@ function init() {
 
 function error(e) { console.error(e) }
 
-// PPM String -> PPM object
-function parse(ppmString) {
+
+// Parse and display PPM object to canvas
+function display(ppmString) {
   // Remove lines comment lines beginning with '#', then rejoin.
   var lines = ppmString.split('\n')
     .filter(l => !l.match(/^#/))
@@ -66,41 +69,32 @@ function parse(ppmString) {
   if (isNaN(maxVal) || maxVal < 0 || maxVal >= 65536)
     return error(`Expected a positive decimal less than 65536 for maximum color value, got ${maxVal}`)
 
-  var pixels = []
-  var idx, r, g, b
-  for (var y = 0; y < height; ++y) {
-    for (var x = 0; x < width; ++x) {
-      idx = 3 * (y * width + x)
+  // Prepare canvas
+  $canvas.width = width
+  $canvas.height = height
+  $canvas.style.width = `${$canvas.width * zoom}px`
+  $canvas.style.height = `${$canvas.height * zoom}px`
 
-      r = parseInt(pixelData[idx])
+  var imgData = ctxt.createImageData(width, height)
+  var pixels = imgData.data
+
+  var to255 = 255 / maxVal
+  var pdi, pi, r, g, b, y, x
+  for (y = 0, pdi = 0, pi = 0; y < height; ++y) {
+    for (x = 0; x < width; ++x, pdi += 3, pi += 4) {
+      r = parseInt(pixelData[pdi])
       if (isNaN(r)) return error(`Expected a decimal value for red component, got ${r}`)
-      g = parseInt(pixelData[idx + 1])
+      g = parseInt(pixelData[pdi + 1])
       if (isNaN(g)) return error(`Expected a decimal value for green component, got ${g}`)
-      b = parseInt(pixelData[idx + 2])
+      b = parseInt(pixelData[pdi + 2])
       if (isNaN(b)) return error(`Expected a decimal value for blue component, got ${b}`)
 
-      pixels.push([r,g,b].map(p => p / maxVal))
+      r *= to255
+      g *= to255
+      b *= to255
+      pixels.set([r,g,b,255], pi)
     }
   }
 
-  return {width, height, pixels}
-}
-
-// Display PPM object to canvas
-function display(ppm) {
-  var $canvas = document.getElementById('display')
-  var c = $canvas.getContext('2d')
-  $canvas.width = zoom * ppm.width
-  $canvas.height = zoom * ppm.height
-  c.scale(zoom, zoom)
-
-  var idx, r, g, b
-  for (var y = 0; y < ppm.height; ++y)
-    for (var x = 0; x < ppm.width; ++x) {
-      idx = y * ppm.width + x
-
-      ;[r, g, b] = ppm.pixels[idx].map(p => Math.floor(p * 255))
-      c.fillStyle = `rgb(${r},${g},${b})`
-      c.fillRect(x, y, 1, 1)
-    }
+  ctxt.putImageData(imgData, 0, 0)
 }

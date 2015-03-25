@@ -5,11 +5,15 @@
   <title>WebPPM — PPM viewer</title>
   <style>
     #display {
+      margin-top: 1rem;
       border: 1px solid #666;
-      display: block; margin-top: 1rem
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      image-rendering: -moz-crisp-edges;
+      -ms-interpolation-mode: nearest-neighbor;
     }
     #zoom { vertical-align: middle }
-
   </style>
   <script src="webppm.js"></script>
 </head>
